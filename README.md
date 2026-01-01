@@ -7,7 +7,7 @@
 **Circle-Permutation-Algorithm** is a transformative generation framework for permutations that shatters the operational bottlenecks of classical combinatorial algorithms. By introducing a **triple-segment memory mirroring topology**, this framework demonstrates that active logic overhead can be structurally decoupled from the $n!$ sequence scale.
 
 This repository is the official C++ implementation of the paper:  
-*"Circle Algorithm: An $O((n-1)!)$ Linear-Time Generation Algorithm for Permutations"*
+*"Circle Algorithm: An $O((n-1)!)$ Linear-Time Generation Algorithm for Permutations"* Work in Progress
 
 ---
 
