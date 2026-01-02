@@ -9,6 +9,11 @@
 This repository is the official C++ implementation of the paper:  
 *"Circle Algorithm: An $O((n-1)!)$ Linear-Time Generation Algorithm for Permutations"* Work in Progress
 
+## 🎮 Live Demo
+
+You can try the interactive circle permutation visualization directly in your browser:
+
+👉 **[View Circle Demo](https://yusheng-hu.github.io/Circle-Permutation-Algorithm/circle%20demo.html)**
 ---
 
 ## 🚀 Key Highlights
@@ -17,8 +22,6 @@ This repository is the official C++ implementation of the paper:
 - **Extreme Performance**: Unlike traditional algorithms, the Circle Algorithm's throughput scales positively with order N. It reaches 4.856 Giga/s at N=14, demonstrating the power of its O((n−1)!) amortized logic. This performance translates to a CPP of 0.41, setting a new benchmark for combinatorial generation.
 - **Optimal Superpermutation**: Provides a universal constructive proof for the Superpermutation problem, yielding sequences that strictly attain the theoretical lower bound $L = \sum_{i=1}^{n} i!$.
 - **Stateless Sharding**: Features a mathematically consistent indexing theorem (Theorem 1) that enables efficient **Rank** and **Unrank** operations for massive parallelization.
-
-
 
 ---
 
