@@ -13,7 +13,7 @@ This repository is the official C++ implementation of the paper:
 
 You can try the interactive circle permutation visualization directly in your browser:
 
-👉 **[View Circle Demo](https://yusheng-hu.github.io/Circle-Permutation-Algorithm/circle%20demo.html)**
+👉 **[View Circle Demo](https://yusheng-hu.github.io/Circle-Permutation-Algorithm/circle_demo.html)**
 ---
 
 ## 🚀 Key Highlights
