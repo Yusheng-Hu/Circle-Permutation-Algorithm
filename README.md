@@ -14,6 +14,9 @@ This repository is the official C++ implementation of the paper:
 You can try the interactive circle permutation visualization directly in your browser:
 
 👉 **[View Circle Demo](https://yusheng-hu.github.io/Circle-Permutation-Algorithm/circle_demo.html)**
+
+👉 **[View Circle Triple Process Demo](https://yusheng-hu.github.io/Circle-Permutation-Algorithm/triple_process_reducecomplex.html)**
+
 ---
 
 ## 🚀 Key Highlights
