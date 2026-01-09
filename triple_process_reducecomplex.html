@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    :root { --cell-w: 60px; --gap: 10px; --n: 5; }
+    body { background: #0f172a; color: #f1f5f9; font-family: 'Fira Code', monospace; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+    
+    .controls { display: flex; gap: 15px; margin-bottom: 25px; }
+    button { padding: 12px 24px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; transition: 0.3s; }
+    .btn-build { background: #3b82f6; color: white; }
+    .btn-run { background: #10b981; color: white; }
+
+    .stage { background: #1e293b; padding: 45px; border-radius: 12px; position: relative; border: 1px solid #334155; margin-bottom: 20px; }
+    .buffer-row { display: flex; gap: var(--gap); background: #0f172a; padding: 12px; border-radius: 8px; position: relative; }
+    
+    .cell { 
+        width: var(--cell-w); height: var(--cell-w); display: flex; align-items: center; justify-content: center; 
+        font-size: 24px; background: #334155; border-radius: 6px; position: relative; z-index: 5;
+    }
+    .y-node { background: #be185d !important; color: white; box-shadow: 0 0 15px #be185d; font-weight: bold; }
+    .x-node { border: 2px solid #f59e0b; color: #f59e0b; }
+
+    /* Blue Circle Logical Range */
+    #circleBox {
+        position: absolute;
+        top: 12px; left: 12px;
+        width: calc(9 * var(--cell-w) + 8 * var(--gap));
+        height: var(--cell-w);
+        outline: 3px dashed #3b82f6;
+        outline-offset: 6px;
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 8px;
+        transition: transform 1.2s ease-in-out; /* Slower relocation */
+        z-index: 2;
+        display: none;
+    }
+
+    /* Green Sliding Window */
+    #win {
+        position: absolute; 
+        top: 12px; left: 12px;
+        width: calc(var(--n) * var(--cell-w) + (var(--n) - 1) * var(--gap));
+        height: var(--cell-w);
+        outline: 4px solid #10b981;
+        outline-offset: 3px;
+        background: rgba(16, 185, 129, 0.15);
+        border-radius: 4px;
+        transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1); /* Slower sliding */
+        z-index: 10;
+        display: none;
+    }
+
+    .list-container { width: 480px; background: #000; border: 1px solid #10b981; padding: 15px; height: 350px; overflow-y: auto; border-radius: 8px; }
+    .perm-item { font-size: 19px; letter-spacing: 5px; padding: 8px; border-bottom: 1px solid #222; text-align: center; }
+    .highlight-y { color: #f472b6; font-weight: bold; }
+    .round-header { color: #3b82f6; font-size: 14px; margin-top: 12px; border-left: 3px solid #3b82f6; padding-left: 10px; margin-bottom: 5px; }
+</style>
+</head>
+<body>
+
+    <h2>Circle Algorithm Visualizer (N=5)</h2>
+    <p style="color: #94a3b8;">Sequence: 1. Locate Circle (Blue) ➔ 2. Deploy Window (Green) ➔ 3. Slide</p>
+    
+    <div class="controls">
+        <button id="btnBuild" class="btn-build">1. Build Buffer</button>
+        <button id="btnRun" class="btn-run" disabled>2. Start Animation</button>
+        <button onclick="location.reload()" style="background:#475569; color:white;">Reset</button>
+    </div>
+
+    <div class="stage">
+        <div id="bufferRow" class="buffer-row">
+            <div id="c-0" class="cell">-</div><div id="c-1" class="cell">-</div><div id="c-2" class="cell">-</div>
+            <div id="c-3" class="cell">-</div><div id="c-4" class="cell">-</div><div id="c-5" class="cell">-</div>
+            <div id="c-6" class="cell">-</div><div id="c-7" class="cell">-</div><div id="c-8" class="cell">-</div>
+            <div id="c-9" class="cell">-</div><div id="c-10" class="cell">-</div><div id="c-11" class="cell">-</div>
+            
+            <div id="circleBox"></div>
+            <div id="win"></div>
+        </div>
+    </div>
+
+    <div id="msg" style="color: #3b82f6; font-weight: bold; margin-bottom: 15px; height: 24px;">Waiting for build...</div>
+    
+    <div class="list-container">
+        <div id="permList"></div>
+    </div>
+
+<script>
+    const step = 70; 
+    let buffer = [0,1,2, 3, 4, 0,1,2, 3, 0,1,2]; 
+    let isRunning = false;
+    let migrationCount = 0;
+
+    const btnRun = document.getElementById('btnRun');
+    const msg = document.getElementById('msg');
+    const win = document.getElementById('win');
+    const circleBox = document.getElementById('circleBox');
+    const list = document.getElementById('permList');
+
+    function syncUI() {
+        buffer.forEach((v, i) => {
+            const el = document.getElementById(`c-${i}`);
+            el.innerText = v;
+            el.className = 'cell ' + (v === 4 ? 'y-node' : (v === 3 ? 'x-node' : ''));
+        });
+    }
+
+    document.getElementById('btnBuild').onclick = async () => {
+        syncUI();
+        msg.innerText = "Buffer ready. Pivot '4' initialized at index 4.";
+        btnRun.disabled = false;
+    };
+
+    btnRun.onclick = async () => {
+        isRunning = true;
+        btnRun.disabled = true;
+        
+        while(isRunning && migrationCount <= 3) {
+            let yIdx = buffer.indexOf(4);
+            let circleStart = yIdx - 4; 
+
+            // Phase 1: Locate Blue Circle Range
+            msg.innerText = `PHASE 1: Locating Circle Range for Pivot 4...`;
+            circleBox.style.display = 'block';
+            circleBox.style.transform = `translateX(${circleStart * step}px)`;
+            win.style.display = 'none'; 
+            
+            await new Promise(r => setTimeout(r, 1500)); 
+
+            // Phase 2: Deploy Green Sliding Window
+            msg.innerText = `PHASE 2: Deploying Window within Circle scope.`;
+            win.style.display = 'block';
+            win.style.transition = "none";
+            win.style.transform = `translateX(${circleStart * step}px)`;
+            
+            const header = document.createElement('div');
+            header.className = 'round-header';
+            header.innerText = `--- MIGRATION ROUND ${migrationCount} ---`;
+            list.prepend(header);
+
+            await new Promise(r => setTimeout(r, 800));
+
+            // Phase 3: Slow Sliding
+            msg.innerText = `PHASE 3: Extracting N permutations...`;
+            for(let i = 0; i < 5; i++) {
+                let currentPos = circleStart + i;
+                win.style.transition = "transform 1.2s cubic-bezier(0.4, 0, 0.2, 1)";
+                win.style.transform = `translateX(${currentPos * step}px)`;
+                
+                await new Promise(r => setTimeout(r, 600)); 
+                
+                let slice = buffer.slice(currentPos, currentPos + 5);
+                const div = document.createElement('div');
+                div.className = 'perm-item';
+                div.innerHTML = slice.map(v => v === 4 ? `<span class="highlight-y">4</span>` : v).join(' ');
+                list.prepend(div);
+                
+                await new Promise(r => setTimeout(r, 1200)); 
+            }
+
+            // Phase 4: Pivot Migration
+            if(migrationCount < 3) {
+                migrationCount++;
+                msg.innerText = `MIGRATION: Moving pivot 4 to index ${buffer.indexOf(4)+1}.`;
+                
+                let oldY = buffer.indexOf(4);
+                [buffer[oldY], buffer[oldY+1]] = [buffer[oldY+1], buffer[oldY]];
+                
+                await new Promise(r => setTimeout(r, 800));
+                syncUI();
+                await new Promise(r => setTimeout(r, 1000));
+                
+                win.style.display = 'none';
+            } else {
+                isRunning = false;
+                msg.innerText = "EXECUTION FINISHED: 3 Migrations Complete.";
+            }
+        }
+    };
+</script>
+</body>
+</html>
