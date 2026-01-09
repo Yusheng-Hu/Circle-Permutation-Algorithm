@@ -3,6 +3,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Complexity: O((n-1)!)](https://img.shields.io/badge/Complexity-O((n--1)!)-blue.svg)](#)
 [![Language: C++](https://img.shields.io/badge/Language-C%2B%2B-red.svg)](#)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18194997.svg)](https://doi.org/10.5281/zenodo.18194997)
+
+An optimized iterative algorithm for Full Permutation generation that challenges the $O(N!)$ amortized complexity barrier.
 
 **Circle-Permutation-Algorithm** is a transformative generation framework for permutations that shatters the operational bottlenecks of classical combinatorial algorithms. By introducing a **triple-segment memory mirroring topology**, this framework demonstrates that active logic overhead can be structurally decoupled from the $n!$ sequence scale.
 
@@ -52,3 +55,10 @@ You can try the interactive circle permutation visualization directly in your br
 | 15 | 1,401,602,636,313 | 1,401,602,636,313 | ✅ **MATCH** |
 
 ---
+## Citation
+
+If you use this algorithm in your research or project, please cite it as:
+
+> Yusheng-Hu. (2026). Circle-Permutation-Algorithm: High-performance Full Permutation Generation [Data set]. Zenodo. https://doi.org/10.5281/zenodo.18194997
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18194997.svg)](https://doi.org/10.5281/zenodo.18194997)
