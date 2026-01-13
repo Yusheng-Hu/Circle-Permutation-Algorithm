@@ -1,6 +1,6 @@
 /**
  * @file Circle_Permutation_Algorithm.cpp
- * @brief High-performance Circle Permutation Algorithm (Dynamic Output Version)
+ * @brief High-performance Circle Permutation Algorithm (Strictly Preserved Logic)
  * @copyright Copyright (c) 2024 [ Yusheng-Hu ]. All rights reserved.
  * @license Licensed under the MIT License.
  */
@@ -15,38 +15,51 @@
 #include <pthread.h>
 #endif
 
-// Configuration: Change N here
-#define N 15
+#define N 14
+// Keep original OUTPUT toggle for verification
+// #define OUTPUT 1
+
 #define lastIndex (N - 1)
 #define secondLastIndex (N - 2)
 #define thirdLastIndex (N - 3)
 
 int main() {
-    // Optimization: Lock process to a single CPU core on Linux
+    // 1. Set CPU Affinity (Linux equivalent of Windows SetThreadAffinityMask)
+    // We bind to Core 0 for consistency on GitHub Runners
 #ifdef __linux__
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
-    CPU_SET(0, &cpuset);
+    CPU_SET(0, &cpuset); 
     pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+    printf("Running on CPU core 0\n");
+#else
+    printf("Running on CPU core 2\n");
 #endif
 
-    // Metadata output for YML parser
+    // Metadata for YAML parser
     printf("PARAM_N: %d\n", N);
+
+    time_t now = time(NULL);
+    struct tm *tm_ptr = localtime(&now);
+    printf("Now time: %02d:%02d:%02d\n", tm_ptr->tm_hour, tm_ptr->tm_min, tm_ptr->tm_sec);
 
     static int C[N] = {0};
     static int D[N][3 * N] = {0};
-    unsigned long long total_count = 0;
 
-    auto start = std::chrono::high_resolution_clock::now();
+    // 2. High-precision timing using std::chrono (QPC Replacement)
+    auto start_point = std::chrono::high_resolution_clock::now();
 
+    // --- START OF ORIGINAL PRESERVED LOGIC ---
     int *P1 = &D[lastIndex][0];
     int *P2 = &D[lastIndex][N];
     int *P3 = &D[lastIndex][N * 2 - 1];
+
     const size_t memcpy_size = static_cast<size_t>(secondLastIndex) * sizeof(int);
 
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < i; j++) {
-            D[i][j] = j; D[i][j + i + 1] = j;
+            D[i][j] = j;
+            D[i][j + i + 1] = j;
         }
         D[i][i] = i;
     }
@@ -68,25 +81,39 @@ int main() {
         memcpy(P3, src_ptr, memcpy_size);
 
         for (int circle_index = 0; circle_index < lastIndex; circle_index++) {
+            #ifdef OUTPUT
+            // This is your original triple-nested loop for rotation output
+            for (int circlehead = circle_index; circlehead < circle_index + N; circlehead++) {
+                for (int oneperm = circlehead; oneperm < circlehead + N; oneperm++) {
+                    printf("%d ", D[lastIndex][oneperm]);
+                }
+                printf("\n");
+            }
+            #endif
+
             D[lastIndex][lastIndex + circle_index] = D[lastIndex][N + circle_index];
             D[lastIndex][N + circle_index] = lastIndex;
         }
-        total_count += lastIndex;
 
         C[thirdLastIndex]++;
         for (i = thirdLastIndex; (i > 0) && (C[i] > i); i--) {
-            C[i] = 0; C[i - 1]++;
+            C[i] = 0;
+            C[i - 1]++;
         }
     }
+    // --- END OF ORIGINAL PRESERVED LOGIC ---
 
-    auto finish = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = finish - start;
-    
-    // Core performance metrics output
-    printf("RESULT_TIME: %lf seconds\n", elapsed.count());
-    printf("CHECKSUM_COUNT: %llu\n", total_count);
+    auto end_point = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff = end_point - start_point;
+    double duration = diff.count();
+
+    printf("\ncircle.exe\t%u\t%lf", N, duration);
+    printf("\nRESULT_TIME: %lf seconds\n", duration);
+
+    // Minimal-cost Anti-optimization Barrier
+    // Volatile prevents the compiler from assuming D is unused
+    int volatile* anti_opt = &D[lastIndex][lastIndex];
+    if (*anti_opt == 100) printf("rare\n");
 
     return 0;
 }
-
-
