@@ -15,7 +15,7 @@
 #include <pthread.h>
 #endif
 
-#define N 14
+#define N 12
 #define lastIndex (N - 1)
 #define secondLastIndex (N - 2)
 #define thirdLastIndex (N - 3)
@@ -81,3 +81,4 @@ int main() {
     if (D[lastIndex][lastIndex] == 100) printf("rare\n");
     return 0;
 }
+
