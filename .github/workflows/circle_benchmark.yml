@@ -11,11 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        # Fetches the source code
         uses: actions/checkout@v4
 
       - name: Get Environment & Metadata
-        # Detects CPU model and extracts the value of N from the header
         run: |
           MODEL=$(lscpu | grep "Model name" | cut -d':' -f2 | xargs)
           N_VAL=$(grep "#define N " Circle_Permutation_Algorithm.cpp | awk '{print $3}')
@@ -23,13 +21,11 @@ jobs:
           echo "CURRENT_N=$N_VAL" >> $GITHUB_ENV
 
       - name: Compile
-        # Compile with maximum optimization levels
         run: |
           g++ -O3 -std=c++11 -march=native -flto -ffast-math -fomit-frame-pointer \
           Circle_Permutation_Algorithm.cpp -o circle_test -pthread
 
       - name: Execute
-        # Runs the benchmark and captures time and checksum
         run: |
           ./circle_test | tee run_log.txt
           TIME_VAL=$(grep "RESULT_TIME" run_log.txt | awk '{print $2}')
@@ -38,17 +34,19 @@ jobs:
           echo "CHECKSUM=$CHECK_VAL" >> $GITHUB_ENV
 
       - name: Generate Summary Report
-        # Creates the final Markdown table in the Summary page
         if: always()
         run: |
-          echo "### 🚀 Performance Benchmark Report (N=${{ env.CURRENT_N }})" >> $GITHUB_STEP_SUMMARY
-          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "| :--- | :--- |" >> $GITHUB_STEP_SUMMARY
-          echo "| **N (Input Size)** | ${{ env.CURRENT_N }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Execution Time** | \`${{ env.TIME_CIRCLE }} s\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Checksum (Perms)** | \`${{ env.CHECKSUM }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Status** | Completed |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "#### 💻 Environment Information" >> $GITHUB_STEP_SUMMARY
-          echo "- **CPU Model:** ${{ env.CPU_MODEL }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Optimization Flags:** \`-O3 -march=native -flto\`" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "### 🚀 Performance Benchmark Report (N=${{ env.CURRENT_N }})"
+            echo ""
+            echo "| Metric | Value |"
+            echo "| :--- | :--- |"
+            echo "| **N (Input Size)** | ${{ env.CURRENT_N }} |"
+            echo "| **Execution Time** | \`${{ env.TIME_CIRCLE }} s\` |"
+            echo "| **Checksum (Perms)** | \`${{ env.CHECKSUM }}\` |"
+            echo "| **Status** | Completed |"
+            echo ""
+            echo "#### 💻 Environment Information"
+            echo "- **CPU Model:** ${{ env.CPU_MODEL }}"
+            echo "- **Optimization Flags:** \`-O3 -march=native -flto\`"
+          } >> $GITHUB_STEP_SUMMARY
