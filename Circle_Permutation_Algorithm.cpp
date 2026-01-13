@@ -78,9 +78,10 @@ int main() {
     auto finish = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = finish - start;
     
-    // Fixed labels for reliable parsing
+    // Crucial: Fixed labels for reliable parsing
     printf("\nRESULT_TIME: %lf seconds\n", elapsed.count());
     printf("CHECKSUM_COUNT: %llu\n", total_count);
 
     return 0;
 }
+
