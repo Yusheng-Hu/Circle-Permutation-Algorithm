@@ -1,84 +1,53 @@
-/**
- * @file Circle_Permutation_Algorithm.cpp
- * @brief High-performance Circle Permutation Algorithm (Cross-platform Implementation)
- * @copyright Copyright (c) 2024 [ Yusheng-Hu ]. All rights reserved.
- * @license Licensed under the MIT License.
- */
+name: Circle Permutation Benchmark
 
-#include <cstdio>
-#include <cstring>
-#include <ctime>
-#include <chrono>
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
 
-#ifdef __linux__
-#include <sched.h>
-#include <pthread.h>
-#endif
+jobs:
+  benchmark:
+    name: Run Circle Permutation Profiling
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        # Fetches the source code from the repository
+        uses: actions/checkout@v4
 
-#define N 12 // Changed to 12 for quick verification, you can set it back to 14
-#define lastIndex (N - 1)
-#define secondLastIndex (N - 2)
-#define thirdLastIndex (N - 3)
+      - name: Get CPU Hardware Info
+        # Logs the specific CPU model used by the GitHub runner
+        run: |
+          MODEL=$(lscpu | grep "Model name" | cut -d':' -f2 | xargs)
+          echo "CPU_MODEL=$MODEL" >> $GITHUB_ENV
 
-int main() {
-    // Set thread affinity for Linux environment
-#ifdef __linux__
-    cpu_set_t cpuset;
-    CPU_ZERO(&cpuset);
-    CPU_SET(1, &cpuset);
-    pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
-#endif
+      - name: Compile Circle Algorithm
+        # Compile with aggressive optimization flags for maximum performance
+        run: |
+          g++ -O3 -std=c++11 -march=native -flto -ffast-math -fomit-frame-pointer \
+          Circle_Permutation_Algorithm.cpp -o circle_test -pthread
 
-    static int C[N] = {0};
-    static int D[N][3 * N] = {0};
+      - name: Execute and Capture Results
+        # Runs the binary and saves output to a file while showing it in real-time
+        run: |
+          ./circle_test | tee run_log.txt
+          # Extract the execution time from the line containing RESULT_TIME
+          TIME_VAL=$(grep "RESULT_TIME" run_log.txt | awk '{print $2}')
+          echo "TIME_CIRCLE=$TIME_VAL" >> $GITHUB_ENV
 
-    auto start = std::chrono::high_resolution_clock::now();
-
-    int *P1 = &D[lastIndex][0];
-    int *P2 = &D[lastIndex][N];
-    int *P3 = &D[lastIndex][N * 2 - 1];
-    const size_t memcpy_size = static_cast<size_t>(secondLastIndex) * sizeof(int);
-
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < i; j++) {
-            D[i][j] = j; D[i][j + i + 1] = j;
-        }
-        D[i][i] = i;
-    }
-
-    int i = thirdLastIndex - 1;
-    while (C[0] < 1) {
-        for (int j = i + 1; j < lastIndex; j++) {
-            const int* src_ptr = &D[j - 1][C[j - 1]];
-            memcpy(D[j], src_ptr, static_cast<size_t>(j) * sizeof(int));
-            memcpy(&D[j][j + 1], src_ptr, static_cast<size_t>(j) * sizeof(int));
-        }
-
-        const int *src_ptr = &D[thirdLastIndex][C[thirdLastIndex]];
-        memcpy(P1, src_ptr, memcpy_size);
-        *(P1 + secondLastIndex) = secondLastIndex;
-        *(P1 + lastIndex) = lastIndex;
-        memcpy(P2, src_ptr, memcpy_size);
-        *(P2 + secondLastIndex) = secondLastIndex;
-        memcpy(P3, src_ptr, memcpy_size);
-
-        for (int circle_index = 0; circle_index < lastIndex; circle_index++) {
-            D[lastIndex][lastIndex + circle_index] = D[lastIndex][N + circle_index];
-            D[lastIndex][N + circle_index] = lastIndex;
-        }
-
-        C[thirdLastIndex]++;
-        for (i = thirdLastIndex; (i > 0) && (C[i] > i); i--) {
-            C[i] = 0; C[i - 1]++;
-        }
-    }
-
-    auto finish = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = finish - start;
-    
-    // Crucial: This label MUST match the grep command in YML
-    printf("\nRESULT_TIME: %lf seconds\n", elapsed.count());
-
-    if (D[lastIndex][lastIndex] == 100) printf("rare\n");
-    return 0;
-}
+      - name: Generate Summary Report
+        # Creates a Markdown table in the GitHub Action Summary page
+        if: always()
+        run: |
+          echo "### 🚀 Performance Benchmark Report" >> $GITHUB_STEP_SUMMARY
+          echo "| Algorithm | Execution Time | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          # Handle cases where time might be missing
+          if [ -n "${{ env.TIME_CIRCLE }}" ]; then
+            echo "| Circle Permutation | \`${{ env.TIME_CIRCLE }} s\` | Completed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Circle Permutation | \`N/A\` | Failed/Timeout |" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### 💻 Environment Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **CPU Model:** ${{ env.CPU_MODEL }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Optimizations:** \`-O3 -march=native -flto\`" >> $GITHUB_STEP_SUMMARY
