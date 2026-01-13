@@ -1,0 +1,34 @@
+name: Circle Permutation Benchmark
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    name: Run Benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile
+        run: |
+          g++ -O3 -std=c++11 -march=native -flto -ffast-math -fomit-frame-pointer \
+          Circle_Permutation_Algorithm.cpp -o circle_test -pthread
+
+      - name: Run
+        run: |
+          ./circle_test | tee run_log.txt
+          # Extract time using a simpler pattern
+          TIME_VAL=$(grep "FINAL_EXECUTION_TIME" run_log.txt | awk '{print $2}')
+          echo "TIME_CIRCLE=$TIME_VAL" >> $GITHUB_ENV
+
+      - name: Report
+        if: always()
+        run: |
+          echo "### 🚀 Performance Report" >> $GITHUB_STEP_SUMMARY
+          echo "| Algorithm | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| Circle Permutation | \`${{ env.TIME_CIRCLE }} s\` |" >> $GITHUB_STEP_SUMMARY
