@@ -1,0 +1,49 @@
+name: Circle Permutation Benchmark
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    name: Run Circle Permutation Profiling
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Get CPU Hardware Info
+      run: |
+        MODEL=$(lscpu | grep "Model name" | cut -d':' -f2 | xargs)
+        echo "CPU_MODEL=$MODEL" >> $GITHUB_ENV
+
+    - name: Compile Circle Algorithm
+      run: |
+        # Using aggressive optimization flags
+        g++ -O3 -std=c++11 -march=native -flto -ffast-math -fomit-frame-pointer \
+        Circle_Permutation_Algorithm.cpp -o circle_test -pthread
+
+    - name: Execute and Capture Results
+      run: |
+        # Use 'tee' to ensure logs show live output
+        ./circle_test | tee run_log.txt
+        
+        # Extract the value after "FINAL_EXECUTION_TIME:"
+        TIME_VAL=$(grep "FINAL_EXECUTION_TIME" run_log.txt | awk '{print $2}')
+        
+        # If TIME_VAL is empty, set a fallback message
+        if [ -z "$TIME_VAL" ]; then TIME_VAL="N/A (Job may have timed out)"; fi
+        echo "TIME_CIRCLE=$TIME_VAL" >> $GITHUB_ENV
+
+    - name: Generate Summary Report
+      if: always() # This ensures the table appears even if the test fails or times out
+      run: |
+        echo "### 🚀 Circle Permutation Performance Report (N=14)" >> $GITHUB_STEP_SUMMARY
+        echo "| Algorithm | Execution Time | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+        echo "| Circle Permutation | \`${{ env.TIME_CIRCLE }} s\` | Done |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "#### 💻 Runtime Environment" >> $GITHUB_STEP_SUMMARY
+        echo "- **CPU Model:** ${{ env.CPU_MODEL }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Optimization:** \`-O3 -march=native -flto\`" >> $GITHUB_STEP_SUMMARY
