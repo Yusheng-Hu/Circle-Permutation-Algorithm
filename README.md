@@ -15,6 +15,14 @@ An optimized iterative algorithm for Full Permutation generation that challenges
 This repository is the official C++ implementation of the paper:  
 *"Circle Algorithm: An $O((n-1)!)$ Linear-Time Generation Algorithm for Permutations"* Work in Progress
 
+### Why This Matters
+
+As discussed in the [computer science community](https://www.reddit.com/r/compsci/comments/1qd6sws/is_the_complexity_of_generating_full_permutations/), $O(N!)$ and $O((N-1)!)$ represent fundamentally different complexity classes:
+
+* **Non-Constant Factor**: Since they differ by a factor of $N$, which grows toward infinity, they are not in the same order of magnitude.
+* **Scalability**: This project focuses on optimizing the transition between permutation sets (e.g., scaling from $N=15$ to $N=16$), significantly enhancing the algorithm's capability to handle larger datasets.
+* **Practical Impact**: By narrowing the computational gap, we make generating permutations for larger $N$ more viable in real-world applications.
+
 ## 🎮 Live Demo
 
 You can try the interactive circle permutation visualization directly in your browser:
