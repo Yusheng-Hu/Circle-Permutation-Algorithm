@@ -10,6 +10,9 @@ jobs:
   benchmark-validation:
     name: Ubuntu-Linux Performance Test (N=14)
     runs-on: ubuntu-latest
+    
+    env:
+      CPU_MODEL: "AMD EPYC 7763 64-Core Processor"
 
     steps:
     - name: Checkout Repository
@@ -20,18 +23,46 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential
 
-    - name: Compile PP+CP Hybrid Engine
-      # Using g++ with -O3 for maximum optimization
+    - name: Compile PP+CP Hybrid Engine (Extreme Optimization)
+      # Using the requested extreme optimization flags
       run: |
-        g++ -O3 cpp/pure_circle.cpp -o pure_circle_linux -lpthread
+        g++ -O3 -std=c++11 -march=native -flto -ffast-math -fomit-frame-pointer \
+        cpp/pure_circle.cpp -o pure_circle_linux -pthread
 
     - name: Execute High-Throughput Benchmark
-      # Measure Giga-perms/sec on standard Linux environment
+      id: run_benchmark
       run: |
-        ./pure_circle_linux
+        echo "Starting Benchmark on $CPU_MODEL..."
+        # Run the program and capture the output
+        ./pure_circle_linux > benchmark_result.txt
+        cat benchmark_result.txt
+        
+        # Extract data for the GitHub Step Summary
+        SPEED=$(grep "Speed:" benchmark_result.txt | awk '{print $2}')
+        TIME=$(grep "Time:" benchmark_result.txt | awk '{print $2}')
+        PERMS=$(grep "Total Permutations:" benchmark_result.txt | awk '{print $3}')
+        
+        echo "SPEED=$SPEED" >> $GITHUB_ENV
+        echo "TIME=$TIME" >> $GITHUB_ENV
+        echo "PERMS=$PERMS" >> $GITHUB_ENV
+
+    - name: Generate Performance Report
+      if: always()
+      run: |
+        echo "### 🚀 Performance Benchmark Report" >> $GITHUB_STEP_SUMMARY
+        echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+        echo "| :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+        echo "| **CPU Model** | ${{ env.CPU_MODEL }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Algorithm** | PP + CP Hybrid (Circle) |" >> $GITHUB_STEP_SUMMARY
+        echo "| **N Value** | 14 |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Total Permutations** | ${{ env.PERMS }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Execution Time** | ${{ env.TIME }} seconds |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Throughput Speed** | 🔥 **${{ env.SPEED }} Giga-perms/sec** |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "> *Optimization Flags: -O3 -march=native -flto -ffast-math -fomit-frame-pointer*" >> $GITHUB_STEP_SUMMARY
 
     - name: Archive Benchmark Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ubuntu-linux-benchmark-binary
+        name: linux-performance-binary
         path: pure_circle_linux
