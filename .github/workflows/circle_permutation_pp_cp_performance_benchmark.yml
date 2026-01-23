@@ -8,46 +8,30 @@ on:
 
 jobs:
   benchmark-validation:
-    name: ${{ matrix.os }} Performance Test (N=14)
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            compiler: g++
-            output_name: pure_circle_linux
-          - os: windows-latest
-            compiler: g++
-            output_name: pure_circle_win.exe
-
-    runs-on: ${{ matrix.os }}
+    name: Ubuntu-Linux Performance Test (N=14)
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Setup MinGW Environment (Windows)
-      if: matrix.os == 'windows-latest'
-      uses: egor-tensin/setup-mingw@v2
-      with:
-        platform: x64
-        cc: 0
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential
 
     - name: Compile PP+CP Hybrid Engine
+      # Using g++ with -O3 for maximum optimization
       run: |
-        ${{ matrix.compiler }} -O3 cpp/pure_circle.cpp -o ${{ matrix.output_name }}
+        g++ -O3 cpp/pure_circle.cpp -o pure_circle_linux -lpthread
 
     - name: Execute High-Throughput Benchmark
+      # Measure Giga-perms/sec on standard Linux environment
       run: |
-        if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          ./${{ matrix.output_name }}
-        else
-          ./${{ matrix.output_name }}
-        fi
-      shell: bash
+        ./pure_circle_linux
 
-    - name: Archive Benchmark Artifacts
+    - name: Archive Benchmark Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.os }}-benchmark-binary
-        path: ${{ matrix.output_name }}
+        name: ubuntu-linux-benchmark-binary
+        path: pure_circle_linux
