@@ -3,7 +3,7 @@
  * @brief   High-Performance Permutation Generator using Circle Algorithm
  * @author  YUSHENG-HU
  * @date    2026-01-23
- * * @details
+ * @details
  * This implementation achieves ultra-high throughput (~16 Giga-perms/sec) by 
  * combining a Non-recursive Plain Changes (PP) generator with a Circular 
  * Permutation (CP) burst logic. 
@@ -24,7 +24,7 @@
  #include <chrono>
  #include <cstdio>
  
- // 增加系统调用头文件
+ // System headers for CPU affinity
  #ifdef _WIN32
  #include <windows.h>
  #else
@@ -33,10 +33,10 @@
  #endif
  
  #ifndef PP_N
- #define PP_N 14 // Default for N=16
+ #define PP_N 14 // Default setup for N=16 (CP_N = PP_N + 2)
  #endif
  
- // CPU 绑定函数
+ // Function to bind execution to a specific CPU core
  void bind_to_core(int core_id) {
  #ifdef _WIN32
      HANDLE process = GetCurrentProcess();
@@ -59,8 +59,7 @@
  }
  
  int main() {
-     // 聚焦第一步：在所有逻辑开始前绑定 CPU
-     // 建议绑定到 Core 0 或 Core 2（避开 Core 0 的系统中断）
+     // Core binding should be performed before main logic execution
      bind_to_core(0);
  
      const int CP_N = PP_N + 2; 
@@ -79,6 +78,7 @@
  
      auto start = std::chrono::high_resolution_clock::now();
  
+     // Main Permutation Generation Loop
      while (C[0] < 1) {
          for (; i < PP_N - 1; ++i) {
              D[i] = D[C[i]];
@@ -94,7 +94,7 @@
              __builtin_memcpy(&D[OFFSET_B2], &D[OFFSET_B1], (CP_N - 1) * sizeof(int));
              __builtin_memcpy(&D[OFFSET_B3], &D[OFFSET_B1], (CP_N - 1) * sizeof(int));
  
-             // 指针预计算：聚焦单核寻址速度
+             // Pointer pre-calculation for single-core addressing speed
              int* target = &D[PP_N + 1];
              #pragma GCC unroll 16
              for (int layer_shift = 0; layer_shift < CP_N - 1; layer_shift++) {
@@ -122,7 +122,7 @@
      int volatile* anti_opt = &D[CP_N - 1];
      if (*anti_opt == -999) printf("rare\n");
  
-     // Standardized output for GitHub Actions log extraction
+     // Standardized output for log parsing
      printf("N: %d\n", CP_N);
      printf("Total Permutations: %llu\n", total_perms);
      printf("Time: %.6f\n", duration);
