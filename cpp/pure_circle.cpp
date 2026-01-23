@@ -17,22 +17,58 @@
  * * License: MIT License
  * Copyright (c) 2026 YUSHENG-HU
  */
+
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include <cstdio>
 #include <cstring>
-#include <windows.h>
+#include <ctime>
 
-// Switch to N=14 for stress test
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <sched.h>
+    #include <unistd.h>
+#endif
+
 #define N 14  
 #define lastIndex (N - 1)
 #define secondLastIndex (N - 2)
 
-// Disable output to test maximum speed
-// #define DEBUG_OUTPUT 
+// Platform-independent core affinity
+void set_cpu_affinity(int core_id) {
+#ifdef _WIN32
+    if (!SetThreadAffinityMask(GetCurrentThread(), 1ULL << core_id)) {
+        printf("Warning: Could not set CPU affinity to core %d\n", core_id);
+    }
+#else
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(core_id, &cpuset);
+    if (sched_setaffinity(0, sizeof(cpu_set_t), &cpuset) != 0) {
+        printf("Warning: Could not set CPU affinity to core %d\n", core_id);
+    }
+#endif
+}
+
+// Platform-independent timer
+double get_time_seconds() {
+#ifdef _WIN32
+    LARGE_INTEGER freq, counter;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&counter);
+    return (double)counter.QuadPart / freq.QuadPart;
+#else
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (double)ts.tv_sec + (double)ts.tv_nsec / 1e9;
+#endif
+}
 
 int main() {
-    // Lock to single core to eliminate interference
-    HANDLE thread = GetCurrentThread();
-    SetThreadAffinityMask(thread, 1ULL << 4); 
+    set_cpu_affinity(4);
 
     static int Circle_D[3 * N] = {0}; 
     static int C_PP[N] = {0}; 
@@ -41,15 +77,10 @@ int main() {
     int *P2 = &Circle_D[N];           
     int *P3 = &Circle_D[N + (N - 1)]; 
 
-    // Initialize P1: 0, 1, 2... N-1
     for (int j = 0; j < N; j++) P1[j] = j;
 
     unsigned long long total_perms = 0;
-
-    // --- Timer initialization ---
-    LARGE_INTEGER start, finish, frequency;
-    QueryPerformanceFrequency(&frequency);
-    QueryPerformanceCounter(&start);
+    double start_time = get_time_seconds();
 
     while (C_PP[0] < 1) {
         // [1] Sync mirror
@@ -58,16 +89,7 @@ int main() {
 
         // [2] CP burst phase
         for (int circle_index = 0; circle_index < lastIndex; circle_index++) {
-            #ifdef DEBUG_OUTPUT
-            for (int head = circle_index; head < circle_index + N; head++) {
-                total_perms++;
-                for (int pos = head; pos < head + N; pos++) printf("%d ", Circle_D[pos]);
-                printf("\n");
-            }
-            #else
             total_perms += N;
-            #endif
-            
             Circle_D[lastIndex + circle_index] = Circle_D[N + circle_index];
             Circle_D[N + circle_index] = lastIndex;
         }
@@ -88,12 +110,10 @@ int main() {
                 int temp = P1[i]; P1[i] = P1[target]; P1[target] = temp;
             }
         }
-        P1[lastIndex] = lastIndex; // Fix last element
+        P1[lastIndex] = lastIndex; 
     }
 
-    // --- Statistics ---
-    QueryPerformanceCounter(&finish);
-    double duration = (double)(finish.QuadPart - start.QuadPart) / frequency.QuadPart;
+    double duration = get_time_seconds() - start_time;
 
     printf("\n--- Performance Result ---");
     printf("\nN: %d", N);
