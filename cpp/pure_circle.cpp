@@ -33,7 +33,7 @@
  #endif
  
  #ifndef PP_N
- #define PP_N 14 // 对应 N=16
+ #define PP_N 14 // Default for N=16
  #endif
  
  // CPU 绑定函数
@@ -122,6 +122,8 @@
      int volatile* anti_opt = &D[CP_N - 1];
      if (*anti_opt == -999) printf("rare\n");
  
+     // Standardized output for GitHub Actions log extraction
+     printf("N: %d\n", CP_N);
      printf("Total Permutations: %llu\n", total_perms);
      printf("Time: %.6f\n", duration);
      printf("Speed: %.2f\n", (total_perms / duration) / 1e9);
