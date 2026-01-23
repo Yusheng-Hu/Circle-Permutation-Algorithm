@@ -8,7 +8,7 @@ on:
 
 jobs:
   performance-test:
-    name: Ubuntu Linux Performance (N=14)
+    name: High-Performance Algorithmic Benchmark
     runs-on: ubuntu-latest
 
     steps:
@@ -25,22 +25,22 @@ jobs:
 
     - name: Compile with Extreme Optimization
       run: |
-        # Ensure the path cpp/pure_circle.cpp is correct in your repo
         g++ -O3 -std=c++11 -march=native -flto -ffast-math -fomit-frame-pointer \
         cpp/pure_circle.cpp -o benchmark_bin -pthread
 
     - name: Execute Benchmark
       id: run_bench
       run: |
-        echo "Running benchmark on ${{ env.CPU_MODEL }}..."
         ./benchmark_bin > result.txt
         cat result.txt
         
-        # Data Extraction
+        # Standardized Data Extraction
+        REAL_N=$(grep "^N:" result.txt | awk '{print $2}')
         PERMS=$(grep "Total Permutations:" result.txt | awk '{print $3}')
         TIME=$(grep "Time:" result.txt | awk '{print $2}')
         SPEED=$(grep "Speed:" result.txt | awk '{print $2}')
         
+        echo "REAL_N=$REAL_N" >> $GITHUB_ENV
         echo "PERMS=$PERMS" >> $GITHUB_ENV
         echo "TIME=$TIME" >> $GITHUB_ENV
         echo "SPEED=$SPEED" >> $GITHUB_ENV
@@ -48,17 +48,18 @@ jobs:
     - name: Publish Performance Report
       if: always()
       run: |
-        echo "### 🚀 High-Throughput Performance Report" >> $GITHUB_STEP_SUMMARY
+        echo "### 🚀 High-Throughput Performance Report (N=${{ env.REAL_N }})" >> $GITHUB_STEP_SUMMARY
         echo "| Metric | Result |" >> $GITHUB_STEP_SUMMARY
         echo "| :--- | :--- |" >> $GITHUB_STEP_SUMMARY
-        echo "| **CPU Processor** | ${{ env.CPU_MODEL }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Processor** | ${{ env.CPU_MODEL }} |" >> $GITHUB_STEP_SUMMARY
         echo "| **Algorithm** | PP + Circle Hybrid |" >> $GITHUB_STEP_SUMMARY
-        echo "| **N Factor** | 14 |" >> $GITHUB_STEP_SUMMARY
-        echo "| **Permutations Count** | ${{ env.PERMS }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| **N-Factor** | **${{ env.REAL_N }}** |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Total Permutations** | ${{ env.PERMS }} |" >> $GITHUB_STEP_SUMMARY
         echo "| **Execution Time** | ${{ env.TIME }} s |" >> $GITHUB_STEP_SUMMARY
-        echo "| **Throughput** | 🔥 **${{ env.SPEED }} Giga-perms/sec** |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Throughput Speed** | 🔥 **${{ env.SPEED }} Giga-perms/sec** |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "> *Compiler Flags: -O3 -march=native -flto -ffast-math*" >> $GITHUB_STEP_SUMMARY
+        echo "---" >> $GITHUB_STEP_SUMMARY
+        echo "> **Note**: Data verified via automated log extraction from standard C++ output." >> $GITHUB_STEP_SUMMARY
 
     - name: Upload Binary Artifact
       uses: actions/upload-artifact@v4
