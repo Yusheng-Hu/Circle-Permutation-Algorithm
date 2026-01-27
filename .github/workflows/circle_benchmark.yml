@@ -3,6 +3,9 @@ name: Circle Permutation Benchmark
 on:
   push:
     branches: [ "main" ]
+    paths:
+      # Only trigger if this specific file changes
+      - 'Circle_Permutation_Algorithm.cpp'
   workflow_dispatch:
 
 jobs:
