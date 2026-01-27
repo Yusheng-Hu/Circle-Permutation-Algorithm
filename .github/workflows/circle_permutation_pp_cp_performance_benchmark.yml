@@ -3,8 +3,12 @@ name: Circle-PP-CP-Performance-Benchmark
 on:
   push:
     branches: [ "main" ]
+paths:
+      - 'cpp/pure_circle.cpp'
   pull_request:
     branches: [ "main" ]
+    paths:
+      - 'cpp/pure_circle.cpp'
 
 jobs:
   performance-test:
