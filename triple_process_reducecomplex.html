@@ -20,8 +20,8 @@
     .y-node { background: #be185d !important; color: white; box-shadow: 0 0 15px #be185d; font-weight: bold; }
     .x-node { border: 2px solid #f59e0b; color: #f59e0b; }
 
-    /* Blue Circle Logical Range */
-    #circleBox {
+    /* Blue ring Logical Range */
+    #ringBox {
         position: absolute;
         top: 12px; left: 12px;
         width: calc(9 * var(--cell-w) + 8 * var(--gap));
@@ -58,8 +58,9 @@
 </head>
 <body>
 
-    <h2>Circle Algorithm Visualizer (N=5)</h2>
-    <p style="color: #94a3b8;">Sequence: 1. Locate Circle (Blue) ➔ 2. Deploy Window (Green) ➔ 3. Slide</p>
+    <h2>
+Ring-Cascade-Permutation-Algorithm Visualizer (N=5)</h2>
+    <p style="color: #94a3b8;">Sequence: 1. Locate ring (Blue) ➔ 2. Deploy Window (Green) ➔ 3. Slide</p>
     
     <div class="controls">
         <button id="btnBuild" class="btn-build">1. Build Buffer</button>
@@ -74,7 +75,7 @@
             <div id="c-6" class="cell">-</div><div id="c-7" class="cell">-</div><div id="c-8" class="cell">-</div>
             <div id="c-9" class="cell">-</div><div id="c-10" class="cell">-</div><div id="c-11" class="cell">-</div>
             
-            <div id="circleBox"></div>
+            <div id="ringBox"></div>
             <div id="win"></div>
         </div>
     </div>
@@ -94,7 +95,7 @@
     const btnRun = document.getElementById('btnRun');
     const msg = document.getElementById('msg');
     const win = document.getElementById('win');
-    const circleBox = document.getElementById('circleBox');
+    const ringBox = document.getElementById('ringBox');
     const list = document.getElementById('permList');
 
     function syncUI() {
@@ -117,21 +118,21 @@
         
         while(isRunning && migrationCount <= 3) {
             let yIdx = buffer.indexOf(4);
-            let circleStart = yIdx - 4; 
+            let ringStart = yIdx - 4; 
 
-            // Phase 1: Locate Blue Circle Range
-            msg.innerText = `PHASE 1: Locating Circle Range for Pivot 4...`;
-            circleBox.style.display = 'block';
-            circleBox.style.transform = `translateX(${circleStart * step}px)`;
+            // Phase 1: Locate Blue ring Range
+            msg.innerText = `PHASE 1: Locating ring Range for Pivot 4...`;
+            ringBox.style.display = 'block';
+            ringBox.style.transform = `translateX(${ringStart * step}px)`;
             win.style.display = 'none'; 
             
             await new Promise(r => setTimeout(r, 1500)); 
 
             // Phase 2: Deploy Green Sliding Window
-            msg.innerText = `PHASE 2: Deploying Window within Circle scope.`;
+            msg.innerText = `PHASE 2: Deploying Window within ring scope.`;
             win.style.display = 'block';
             win.style.transition = "none";
-            win.style.transform = `translateX(${circleStart * step}px)`;
+            win.style.transform = `translateX(${ringStart * step}px)`;
             
             const header = document.createElement('div');
             header.className = 'round-header';
@@ -143,7 +144,7 @@
             // Phase 3: Slow Sliding
             msg.innerText = `PHASE 3: Extracting N permutations...`;
             for(let i = 0; i < 5; i++) {
-                let currentPos = circleStart + i;
+                let currentPos = ringStart + i;
                 win.style.transition = "transform 1.2s cubic-bezier(0.4, 0, 0.2, 1)";
                 win.style.transform = `translateX(${currentPos * step}px)`;
                 
