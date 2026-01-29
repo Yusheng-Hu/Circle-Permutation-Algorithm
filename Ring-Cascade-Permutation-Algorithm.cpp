@@ -116,7 +116,9 @@ int main() {
     if (*anti_opt == 100) printf("rare\n");
 
     return 0;
+    
 }
+
 
 
 
