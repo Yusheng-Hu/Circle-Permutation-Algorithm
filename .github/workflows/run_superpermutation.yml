@@ -1,0 +1,41 @@
+# GitHub Action to execute the Ring-Cascade Superpermutation Generator
+# This workflow only triggers when the specific generator script is modified.
+name: Generate Superpermutations
+
+on:
+  push:
+    branches: [ "main" ]
+    # Filter: Only run if this specific file is changed
+    paths:
+      - 'superpermutation/ring-cascade_superpermutation_generate.py'
+  
+  pull_request:
+    branches: [ "main" ]
+    # Filter: Only run if this specific file is changed
+    paths:
+      - 'superpermutation/ring-cascade_superpermutation_generate.py'
+
+  # Still allow manual execution for testing purposes
+  workflow_dispatch:
+
+jobs:
+  run-generator:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Execute Generator Script
+        run: |
+          # Running the core algorithm script
+          python superpermutation/ring-cascade_superpermutation_generate.py
+
+      - name: Log Execution Result
+        if: success()
+        run: echo "Algorithm execution triggered by file change was successful."
