@@ -28,9 +28,7 @@ As discussed in the [computer science community](https://www.reddit.com/r/compsc
 
 You can try the interactive Ring-Cascade permutation visualization directly in your browser:
 
-👉 **[View Ring-Cascade Demo](https://yusheng-hu.github.io/Ring-Cascade-Permutation-Algorithm/Ring-Cascade_demo.html)**
-
-👉 **[View Ring-Cascade Triple Process Demo](https://yusheng-hu.github.io/Ring-Cascade-Permutation-Algorithm/triple_process_reducecomplex.html)**
+👉 **[View Ring-Cascade and Triple Process](https://yusheng-hu.github.io/Ring-Cascade-Permutation-Algorithm/index.html)**
 
 ---
 
